@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <form id="form">
+    <fieldset>
+      <legend>How to write to Obsidian</legend>
+      <label><input type="radio" name="method" value="rest"> Local REST API plugin <span class="hint">(recommended — silent, updates the note in place)</span></label>
+      <label><input type="radio" name="method" value="uri"> obsidian:// URI <span class="hint">(no plugin; copies the note and briefly opens Obsidian)</span></label>
+    </fieldset>
+
+    <fieldset data-method="rest">
+      <legend>Local REST API</legend>
+      <label>URL <input name="restUrl" type="url" placeholder="https://127.0.0.1:27124"></label>
+      <label>API key <input name="apiKey" type="password" autocomplete="off"></label>
+      <p class="hint">Install “Local REST API” from Obsidian's community plugins and copy the key from its settings.
+        For the default https URL, open it once in Firefox and accept the self-signed certificate
+        (or enable the plugin's non-encrypted server and use <code>http://127.0.0.1:27123</code>).</p>
+      <button type="button" id="test">Test connection</button> <span id="testResult"></span>
+    </fieldset>
+
+    <fieldset data-method="uri">
+      <legend>obsidian:// URI</legend>
+      <label>Vault name <input name="vault" placeholder="My Vault"></label>
+      <p class="hint">Leave empty to use the currently open vault.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Notes</legend>
+      <label>Folder <input name="folder" placeholder="Hacker News"></label>
+      <label><input type="checkbox" name="autoSync"> Update the note every time I save a comment</label>
+      <label><input type="checkbox" name="collapsed"> Show threads collapsed by default</label>
+    </fieldset>
+
+    <button type="submit" class="primary">Save settings</button> <span id="saved"></span>
+  </form>
+  <script src="../lib/render.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

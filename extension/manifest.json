@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "name": "HN Comment Saver",
+  "version": "1.0.0",
+  "description": "Save Hacker News comments (as collapsible threads) to an Obsidian note named after the post.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "hn-comment-saver@local",
+      "strict_min_version": "109.0"
+    }
+  },
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg"
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "https://news.ycombinator.com/*",
+    "https://hacker-news.firebaseio.com/*",
+    "http://127.0.0.1/*",
+    "https://127.0.0.1/*",
+    "http://localhost/*",
+    "https://localhost/*"
+  ],
+  "background": {
+    "scripts": ["lib/render.js", "background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://news.ycombinator.com/item*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_action": {
+    "default_title": "HN Comment Saver",
+    "default_icon": "icons/icon.svg",
+    "default_popup": "popup/popup.html"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": false
+  }
+}

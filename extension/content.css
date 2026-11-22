@@ -1,0 +1,15 @@
+.hncs-controls a { color: inherit; }
+.hncs-controls a:hover { text-decoration: underline; }
+tr.hncs-saved .hncs-save { color: #ff6600; font-weight: bold; }
+tr.hncs-saved .comment { border-left: 3px solid #ff6600; padding-left: 6px; }
+
+#hncs-toast {
+  position: fixed; right: 16px; bottom: 16px; z-index: 2147483647;
+  max-width: 420px; padding: 10px 14px; border-radius: 6px;
+  background: #222; color: #fff; font: 12px/1.4 Verdana, Geneva, sans-serif;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity .15s, transform .15s;
+}
+#hncs-toast.hncs-show { opacity: 1; transform: none; pointer-events: auto; }
+#hncs-toast.hncs-error { background: #a32020; }

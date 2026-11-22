@@ -1,0 +1,21 @@
+:root { --accent: #ff6600; --fg: #222; --muted: #777; --bg: #fff; --line: #e6e6e6; }
+@media (prefers-color-scheme: dark) {
+  :root { --fg: #eee; --muted: #aaa; --bg: #2b2a33; --line: #444; }
+}
+body { width: 360px; margin: 0; font: 13px/1.4 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+header { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--accent); color: #fff; }
+header a { color: #fff; }
+#status { padding: 0 12px; font-size: 12px; }
+#status:not(:empty) { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+#status.error { color: #d33; }
+ul { list-style: none; margin: 0; padding: 0; max-height: 480px; overflow-y: auto; }
+li { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+li .title { display: block; font-weight: 600; color: var(--fg); text-decoration: none; margin-bottom: 2px; }
+li .title:hover { text-decoration: underline; }
+li .meta { color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+li .actions { display: flex; gap: 6px; }
+button { font: inherit; font-size: 12px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 4px; background: transparent; color: var(--fg); cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger:hover { border-color: #d33; color: #d33; }
+#empty { padding: 12px; color: var(--muted); }

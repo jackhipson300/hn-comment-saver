@@ -1,0 +1,10 @@
+body { font: 13px/1.5 system-ui, sans-serif; margin: 12px; max-width: 560px; }
+fieldset { border: 1px solid #ccc; border-radius: 6px; margin: 0 0 12px; padding: 8px 12px 10px; }
+legend { font-weight: 600; padding: 0 4px; }
+label { display: block; margin: 6px 0; }
+input[type=url], input[type=password], input:not([type]) { display: block; width: 100%; box-sizing: border-box; padding: 4px 6px; margin-top: 2px; }
+.hint { color: #777; font-size: 12px; }
+button { font: inherit; padding: 4px 10px; }
+.primary { background: #ff6600; color: #fff; border: 1px solid #ff6600; border-radius: 4px; }
+.ok { color: #2a7d2a; } .err { color: #c22; }
+[hidden] { display: none; }
