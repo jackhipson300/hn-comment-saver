@@ -1,0 +1,12 @@
+{
+  "name": "hn-comment-saver",
+  "private": true,
+  "description": "Firefox extension: save Hacker News comments to Obsidian.",
+  "scripts": {
+    "dev": "web-ext run --source-dir extension --firefox-profile hncs-dev --profile-create-if-missing --keep-profile-changes --start-url https://news.ycombinator.com/",
+    "lint": "web-ext lint --source-dir extension --self-hosted"
+  },
+  "devDependencies": {
+    "web-ext": "10.8.0"
+  }
+}

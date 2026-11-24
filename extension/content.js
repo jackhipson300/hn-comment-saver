@@ -226,7 +226,8 @@
     const row = rows.get(id);
     if (row) {
       const el = row.el;
-      const user = el.querySelector(".comhead .hnuser");
+      // HN no longer always marks the author link with class "hnuser".
+      const user = el.querySelector(".comhead .hnuser, .comhead a[href^='user?id=']");
       const textEl = el.querySelector(".commtext");
       let text;
       if (textEl) text = htmlToMd(textEl);
@@ -273,8 +274,33 @@
   }
 
   let savedSet = new Set();
-  function refresh(ids) {
+  let notes = {};
+
+  /** Where to put note UI for a comment: right after its text. */
+  function noteAnchor(row) {
+    return row.el.querySelector(".comment") || row.el.querySelector("td.default") || row.el;
+  }
+
+  function renderNoteView(id, row) {
+    let view = row.el.querySelector(".hncs-note-view");
+    const note = notes[id];
+    if (!note) {
+      if (view) view.remove();
+      return;
+    }
+    if (!view) {
+      view = document.createElement("div");
+      view.className = "hncs-note-view";
+      view.title = "Your note (click to edit)";
+      view.addEventListener("click", () => openNoteEditor(id));
+      noteAnchor(row).after(view);
+    }
+    view.textContent = note;
+  }
+
+  function refresh(ids, newNotes) {
     savedSet = new Set(ids.map(String));
+    if (newNotes) notes = newNotes;
     for (const [id, row] of rows) {
       const saved = savedSet.has(id);
       row.el.classList.toggle("hncs-saved", saved);
@@ -283,7 +309,85 @@
         btn.textContent = saved ? "unsave" : "save";
         btn.title = saved ? "Remove this comment from the Obsidian note" : "Save this comment";
       }
+      const noteBtn = row.el.querySelector(".hncs-note");
+      if (noteBtn) noteBtn.textContent = notes[id] ? "edit note" : "note";
+      renderNoteView(id, row);
     }
+  }
+
+  async function commentWithAncestors(id) {
+    const [story, anc] = await Promise.all([getStory(), ancestorIds(id)]);
+    const comment = await extractComment(id);
+    comment.ancestors = anc;
+    return { story, comment };
+  }
+
+  function openNoteEditor(id) {
+    const row = rows.get(id);
+    if (!row) return;
+    const existing = row.el.querySelector(".hncs-note-editor");
+    if (existing) {
+      existing.querySelector("textarea").focus();
+      return;
+    }
+    const view = row.el.querySelector(".hncs-note-view");
+    if (view) view.hidden = true;
+
+    const box = document.createElement("div");
+    box.className = "hncs-note-editor";
+    const ta = document.createElement("textarea");
+    ta.rows = 4;
+    ta.placeholder = "Your note on this comment (Markdown). Ctrl+Enter to save, Esc to cancel.";
+    ta.value = notes[id] || "";
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.textContent = "Save note";
+    const cancelBtn = document.createElement("button");
+    cancelBtn.type = "button";
+    cancelBtn.textContent = "Cancel";
+    const hint = document.createElement("span");
+    hint.className = "hncs-note-hint";
+    hint.textContent = notes[id] ? "Clear the text and save to delete the note." : "";
+    const actions = document.createElement("div");
+    actions.className = "hncs-note-actions";
+    actions.append(saveBtn, " ", cancelBtn, " ", hint);
+    box.append(ta, actions);
+
+    const close = () => {
+      box.remove();
+      if (view) view.hidden = false;
+    };
+    const submit = async () => {
+      saveBtn.disabled = cancelBtn.disabled = true;
+      try {
+        const { story, comment } = await commentWithAncestors(id);
+        const note = ta.value;
+        const res = await browser.runtime.sendMessage({ type: "setNote", story, comment, note });
+        close();
+        refresh(res.ids, res.notes);
+        await handleSync(res.sync, note.trim() ? "Note saved" : "Note removed");
+      } catch (e) {
+        console.error("[HN Comment Saver]", e);
+        toast(`Error: ${e.message}`, true);
+        saveBtn.disabled = cancelBtn.disabled = false;
+      }
+    };
+    saveBtn.addEventListener("click", submit);
+    cancelBtn.addEventListener("click", close);
+    ta.addEventListener("keydown", (e) => {
+      // Keep HN's own keyboard shortcuts from firing while typing.
+      e.stopPropagation();
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        submit();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+      }
+    });
+
+    (view || noteAnchor(row)).after(box);
+    ta.focus();
   }
 
   function openObsidianUri(sync) {
@@ -321,8 +425,11 @@
   async function onSave(id, withAncestors) {
     try {
       if (!withAncestors && savedSet.has(id)) {
+        if (notes[id] && !confirm("Unsaving this comment also deletes your note on it. Continue?")) {
+          return;
+        }
         const res = await browser.runtime.sendMessage({ type: "unsave", storyId, ids: [id] });
-        refresh(res.ids);
+        refresh(res.ids, res.notes);
         await handleSync(res.sync, "Removed comment");
         return;
       }
@@ -336,7 +443,7 @@
         })
       );
       const res = await browser.runtime.sendMessage({ type: "save", story, comments });
-      refresh(res.ids);
+      refresh(res.ids, res.notes);
       const n = comments.length;
       await handleSync(res.sync, `Saved ${n} comment${n === 1 ? "" : "s"}`);
     } catch (e) {
@@ -374,6 +481,8 @@
         "Save this comment and all of its parent comments",
         () => onSave(id, true)
       ),
+      " | ",
+      makeLink("hncs-note", "note", "Add your own note to this comment", () => openNoteEditor(id)),
       " "
     );
     const navs = comhead.querySelector(".navs");
@@ -383,6 +492,6 @@
 
   browser.runtime
     .sendMessage({ type: "getSaved", storyId })
-    .then((res) => refresh(res.ids || []))
+    .then((res) => refresh(res.ids || [], res.notes || {}))
     .catch((e) => console.error("[HN Comment Saver]", e));
 })();

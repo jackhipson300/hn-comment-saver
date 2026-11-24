@@ -4,10 +4,13 @@ Click **save** on any Hacker News comment to add it to an Obsidian note named
 after the post. The note links to the post and shows the saved comments as
 nested, collapsible threads (Obsidian callouts).
 
-Each comment gets two links next to its author/age:
+Each comment gets three links next to its author/age:
 
 - **save** – save just this comment (click again — it reads **unsave** — to remove it)
 - **save+parents** – save this comment and every ancestor up to the top level
+- **note** – type your own note on the comment (saving a note also saves the
+  comment). It appears in Obsidian as an indented quote under the comment's
+  text. Clear the text and save to delete it.
 
 A saved comment is placed under its nearest *saved* ancestor, so it appears
 inside all of its saved parents like on HN; with no saved ancestor it is a
@@ -15,15 +18,37 @@ top-level comment. Siblings are ordered oldest first.
 
 ## Install
 
-Temporary (for trying it out): `about:debugging#/runtime/this-firefox` →
-**Load Temporary Add-on…** → pick `extension/manifest.json`. It is removed
-when Firefox restarts.
+Download the `.xpi` from the
+[latest release](https://github.com/jackhipson300/hn-comment-saver/releases/latest)
+and open it in Firefox (or `about:addons` → gear → *Install Add-on From File*).
+It is signed by Mozilla as an unlisted add-on, so it works in regular Firefox
+and **updates itself**: Firefox checks the `update_url` in the manifest about
+once a day (`about:addons` → gear → *Check for Updates* to update right away).
 
-Permanent: unsigned add-ons only install in Firefox Developer Edition /
-Nightly / ESR with `xpinstall.signatures.required = false` in `about:config`
-(then install `hn-comment-saver.xpi` via `about:addons` → gear → *Install
-Add-on From File*). Or sign it for free as an unlisted add-on with
-`npx web-ext sign --channel=unlisted` (needs an addons.mozilla.org API key).
+## Releasing
+
+Every push to the default branch that touches `extension/` runs
+`.github/workflows/release.yml`, which stamps the version
+(`<major>.<minor>.<run number>`, major/minor from `extension/manifest.json`),
+signs it with Mozilla, and publishes a GitHub release with the `.xpi` and
+`updates.json`. Installed copies pick it up automatically.
+
+One-time setup: create API credentials at
+<https://addons.mozilla.org/developers/addon/api/key/> and add them as repo
+secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` (*Settings → Secrets and
+variables → Actions*). It can also be started by hand from the Actions tab
+(*Run workflow*).
+
+## Development
+
+```sh
+npm install
+npm run dev    # Firefox with the extension loaded; reloads on every file change
+npm run lint
+```
+
+`npm run dev` uses a separate Firefox profile named `hncs-dev` that keeps its
+settings between runs, so the Obsidian settings only need entering once.
 
 ## Connect to Obsidian
 

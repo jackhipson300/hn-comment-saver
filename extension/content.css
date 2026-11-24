@@ -13,3 +13,16 @@ tr.hncs-saved .comment { border-left: 3px solid #ff6600; padding-left: 6px; }
 }
 #hncs-toast.hncs-show { opacity: 1; transform: none; pointer-events: auto; }
 #hncs-toast.hncs-error { background: #a32020; }
+
+.hncs-note-view {
+  margin: 6px 0 4px; padding: 4px 8px; border-left: 3px solid #828282;
+  color: #444; white-space: pre-wrap; cursor: pointer; font-size: 9pt;
+}
+.hncs-note-view:hover { background: rgba(0,0,0,.04); }
+.hncs-note-editor { margin: 6px 0 4px; max-width: 640px; }
+.hncs-note-editor textarea {
+  width: 100%; box-sizing: border-box; font: 10pt Verdana, Geneva, sans-serif;
+  padding: 4px; resize: vertical;
+}
+.hncs-note-actions { margin-top: 4px; }
+.hncs-note-hint { color: #828282; font-size: 8pt; }

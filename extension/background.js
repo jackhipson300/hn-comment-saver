@@ -54,13 +54,17 @@ async function saveComments(story, comments) {
   if (story.title) post.title = story.title;
   if (story.url) post.url = story.url;
   for (const c of comments) {
-    post.comments[String(c.id)] = {
+    const prev = post.comments[String(c.id)];
+    const entry = {
       id: String(c.id),
       author: c.author || "",
       time: c.time || "",
       text: c.text || "",
       ancestors: (c.ancestors || []).map(String),
     };
+    // Re-saving a comment must not lose the note attached to it.
+    if (prev && prev.note) entry.note = prev.note;
+    post.comments[String(c.id)] = entry;
   }
   post.updated = Date.now();
   await putPost(post);
@@ -74,6 +78,29 @@ async function unsaveComments(storyId, ids) {
   post.updated = Date.now();
   await putPost(post);
   return post;
+}
+
+/** Set (or clear, when empty) the note on a comment, saving the comment first if needed. */
+async function setNote(story, comment, note) {
+  const id = String(comment.id);
+  let post = await getPost(story.id);
+  if (!post || !post.comments[id]) {
+    if (!note) return post;
+    post = await saveComments(story, [comment]);
+  }
+  if (note) post.comments[id].note = note;
+  else delete post.comments[id].note;
+  post.updated = Date.now();
+  await putPost(post);
+  return post;
+}
+
+function notesOf(post) {
+  const notes = {};
+  for (const [id, c] of Object.entries((post && post.comments) || {})) {
+    if (c.note) notes[id] = c.note;
+  }
+  return notes;
 }
 
 function vaultUrl(base, path) {
@@ -164,7 +191,16 @@ async function testConnection() {
 async function handle(msg) {
   switch (msg.type) {
     case "getSaved": {
-      return { ids: savedIds(await getPost(msg.storyId)) };
+      const post = await getPost(msg.storyId);
+      return { ids: savedIds(post), notes: notesOf(post) };
+    }
+    case "setNote": {
+      const note = String(msg.note || "").replace(/\r/g, "").trim();
+      const post = await serial(() => setNote(msg.story, msg.comment, note));
+      if (!post) return { ids: [], notes: {} };
+      const settings = await getSettings();
+      const sync = settings.autoSync ? await syncPost(post, settings) : null;
+      return { ids: savedIds(post), notes: notesOf(post), sync };
     }
     case "save":
     case "unsave": {
@@ -173,10 +209,10 @@ async function handle(msg) {
           ? saveComments(msg.story, msg.comments)
           : unsaveComments(msg.storyId, msg.ids)
       );
-      if (!post) return { ids: [] };
+      if (!post) return { ids: [], notes: {} };
       const settings = await getSettings();
       const sync = settings.autoSync ? await syncPost(post, settings) : null;
-      return { ids: savedIds(post), sync };
+      return { ids: savedIds(post), notes: notesOf(post), sync };
     }
     case "sync": {
       const post = await getPost(msg.storyId);

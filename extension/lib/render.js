@@ -9,7 +9,7 @@
     restUrl: "https://127.0.0.1:27124",
     apiKey: "",
     vault: "",
-    folder: "Hacker News",
+    folder: "Sources/Blogs/Hacker News Comments",
     autoSync: true,
     collapsed: false, // render threads folded by default
   };
@@ -102,6 +102,13 @@
     const lines = [`> [!quote]${fold} ${author} · ${when}`];
     const body = String(c.text || "").replace(/\r/g, "").split("\n");
     for (const l of body) lines.push(l ? `> ${l}` : ">");
+    // The user's own note: a nested quote (indented, vertical bar) under the text.
+    // It is the user's Markdown, so it is not escaped.
+    const note = String(c.note || "").replace(/\r/g, "").trim();
+    if (note) {
+      lines.push(">");
+      for (const l of note.split("\n")) lines.push(l.trim() ? `> > ${l}` : "> >");
+    }
     for (const child of children.get(String(c.id)) || []) {
       lines.push(">");
       for (const cl of renderComment(child, children, fold)) {
